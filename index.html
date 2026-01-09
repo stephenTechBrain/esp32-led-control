@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>ESP32 LED Control</title>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+  </head>
+
+  <body>
+    <h2>ESP32 LED Control</h2>
+    <p>Status: <strong id="state">Loading...</strong></p>
+    <button onclick="toggleLED()">Toggle LED</button>
+
+    <script>
+      const firebaseConfig = {
+        apiKey: "YOUR_API_KEY",
+        authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
+        databaseURL: "https://console.firebase.google.com/project/esp32-led-control-9fc79/database/esp32-led-control-9fc79-default-rtdb/data/~2F",
+        projectId: "YOUR_PROJECT_ID",
+        appId: "YOUR_APP_ID",
+      };
+
+      firebase.initializeApp(firebaseConfig);
+
+      const db = firebase.database();
+      const ledRef = db.ref("esp32/led");
+
+      ledRef.on("value", (snapshot) => {
+        document.getElementById("state").innerText = snapshot.val();
+      });
+
+      function toggleLED() {
+        ledRef.get().then((snapshot) => {
+          ledRef.set(snapshot.val() === "ON" ? "OFF" : "ON");
+        });
+      }
+    </script>
+  </body>
+</html>
