@@ -1,39 +1,82 @@
 <!DOCTYPE html>
-<html>
-  <head>
-    <title>ESP32 LED Control</title>
-    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
-  </head>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ESP32 LED Control</title>
 
-  <body>
-    <h2>ESP32 LED Control</h2>
-    <p>Status: <strong id="state">Loading...</strong></p>
-    <button onclick="toggleLED()">Toggle LED</button>
+  <!-- Firebase JS SDK -->
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
 
-    <script>
-      const firebaseConfig = {
-        apiKey: "YOUR_API_KEY",
-        authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
-        databaseURL: "https://console.firebase.google.com/project/esp32-led-control-9fc79/database/esp32-led-control-9fc79-default-rtdb/data/~2F",
-        projectId: "YOUR_PROJECT_ID",
-        appId: "YOUR_APP_ID",
-      };
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      text-align: center;
+      padding: 50px;
+      background-color: #f0f4f8;
+    }
+    h2 {
+      color: #0a66c2;
+    }
+    #state {
+      font-weight: bold;
+      margin: 10px 0;
+      font-size: 1.2em;
+    }
+    button {
+      background-color: #0a66c2;
+      color: white;
+      border: none;
+      padding: 15px 30px;
+      font-size: 1em;
+      border-radius: 8px;
+      cursor: pointer;
+    }
+    button:hover {
+      background-color: #084a8a;
+    }
+  </style>
+</head>
+<body>
+  <h2>ESP32 LED Control</h2>
+  <p>LED Status: <span id="state">Loading...</span></p>
+  <button onclick="toggleLED()">Toggle LED</button>
 
-      firebase.initializeApp(firebaseConfig);
+  <script>
+    // Your Firebase configuration
+    const firebaseConfig = {
+      apiKey: "AIzaSyBWvIdxSPqJxkNhf3fUJUo4ORHr4rFnDuo",
+      authDomain: "esp32-led-control-9fc79.firebaseapp.com",
+      databaseURL: "https://esp32-led-control-9fc79-default-rtdb.firebaseio.com",
+      projectId: "esp32-led-control-9fc79",
+      storageBucket: "esp32-led-control-9fc79.firebasestorage.app",
+      messagingSenderId: "745912785528",
+      appId: "1:745912785528:web:c59d79707af806752dab8d",
+      measurementId: "G-S5MJN7CW7"
+    };
 
-      const db = firebase.database();
-      const ledRef = db.ref("esp32/led");
+    // Initialize Firebase
+    firebase.initializeApp(firebaseConfig);
 
-      ledRef.on("value", (snapshot) => {
-        document.getElementById("state").innerText = snapshot.val();
+    // Reference to the LED state in Firebase
+    const ledRef = firebase.database().ref("esp32/led");
+
+    // Update the LED status in real-time
+    ledRef.on("value", snapshot => {
+      const state = snapshot.val();
+      document.getElementById("state").innerText = state;
+    });
+
+    // Toggle LED state
+    function toggleLED() {
+      ledRef.get().then(snapshot => {
+        const current = snapshot.val();
+        const next = current === "ON" ? "OFF" : "ON";
+        ledRef.set(next);
       });
-
-      function toggleLED() {
-        ledRef.get().then((snapshot) => {
-          ledRef.set(snapshot.val() === "ON" ? "OFF" : "ON");
-        });
-      }
-    </script>
-  </body>
+    }
+  </script>
+</body>
 </html>
+
