@@ -1,97 +1,106 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>ESP32 LED Control</title>
+  <title>ESP32 Control Panel</title>
 
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
 
   <style>
     body {
-      font-family: Arial, sans-serif;
+      font-family: Arial;
       text-align: center;
-      padding: 50px;
-      background-color: #f0f4f8;
+      background: #f4f6f8;
+      padding: 30px;
     }
-    h2 {
-      color: #0a66c2;
-    }
-    #state {
-      font-weight: bold;
-      margin: 20px 0;
-      font-size: 2em;
-      padding: 20px;
-      border-radius: 12px;
-      display: inline-block;
-      width: 150px;
-    }
-    .OFF {
-      background-color: #ff4d4d;
-      color: white;
-    }
-    .ON {
-      background-color: #4caf50;
-      color: white;
+    .box {
+      padding: 15px;
+      margin: 10px auto;
+      width: 80%;
+      max-width: 400px;
+      border-radius: 8px;
+      background: white;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
     }
     button {
-      background-color: #0a66c2;
-      color: white;
-      border: none;
-      padding: 15px 30px;
-      font-size: 1em;
-      border-radius: 8px;
-      cursor: pointer;
+      padding: 10px 20px;
+      margin-top: 10px;
+      font-size: 16px;
     }
-    button:hover {
-      background-color: #084a8a;
+    input {
+      width: 90%;
+      padding: 10px;
+      font-size: 16px;
     }
+    .on { color: green; font-weight: bold; }
+    .off { color: red; font-weight: bold; }
   </style>
 </head>
+
 <body>
-  <h2>ESP32 LED Control</h2>
-  <p>LED Status:</p>
-  <div id="state" class="OFF">OFF</div>
-  <br><br>
+
+<h2>ESP32 Control Panel</h2>
+
+<div class="box">
+  <p>LED State: <span id="ledState" class="off">OFF</span></p>
   <button onclick="toggleLED()">Toggle LED</button>
+</div>
 
-  <script>
-    // Firebase configuration
-    const firebaseConfig = {
-      apiKey: "AIzaSyBWvIdxSPqJxkNhf3fUJUo4ORHr4rFnDuo",
-      authDomain: "esp32-led-control-9fc79.firebaseapp.com",
-      databaseURL: "https://esp32-led-control-9fc79-default-rtdb.firebaseio.com",
-      projectId: "esp32-led-control-9fc79",
-      storageBucket: "esp32-led-control-9fc79.firebasestorage.app",
-      messagingSenderId: "745912785528",
-      appId: "1:745912785528:web:c59d79707af806752dab8d",
-      measurementId: "G-S5MJN7CW7"
-    };
+<div class="box">
+  <p>Send text to ESP32:</p>
+  <input id="textInput" placeholder="Type message">
+  <br>
+  <button onclick="sendText()">Send</button>
+</div>
 
-    // Initialize Firebase
-    firebase.initializeApp(firebaseConfig);
+<div class="box">
+  <p>Message from ESP32:</p>
+  <p id="fromEsp">---</p>
+</div>
 
-    const ledRef = firebase.database().ref("esp32/led");
-    const stateDiv = document.getElementById("state");
+<script>
+  const firebaseConfig = {
+    apiKey: "AIzaSyBWvIdxSPqJxkNhf3fUJUo4ORHr4rFnDuo",
+    authDomain: "esp32-led-control-9fc79.firebaseapp.com",
+    databaseURL: "https://esp32-led-control-9fc79-default-rtdb.firebaseio.com",
+    projectId: "esp32-led-control-9fc79",
+    messagingSenderId: "745912785528",
+    appId: "1:745912785528:web:c59d79707af806752dab8d"
+  };
 
-    // Update LED status in real-time
-    ledRef.on("value", snapshot => {
-      const value = snapshot.val();
-      stateDiv.innerText = value;
-      stateDiv.className = value; // change background color
-      console.log("LED state updated:", value);
+  firebase.initializeApp(firebaseConfig);
+  const db = firebase.database();
+
+  const ledRef = db.ref("esp32/led");
+  const webToEspRef = db.ref("esp32/webToEsp");
+  const espToWebRef = db.ref("esp32/espToWeb");
+
+  ledRef.on("value", snap => {
+    const v = snap.val();
+    const el = document.getElementById("ledState");
+    el.textContent = v;
+    el.className = v === "ON" ? "on" : "off";
+  });
+
+  espToWebRef.on("value", snap => {
+    document.getElementById("fromEsp").textContent = snap.val();
+  });
+
+  function toggleLED() {
+    ledRef.get().then(snap => {
+      ledRef.set(snap.val() === "ON" ? "OFF" : "ON");
     });
+  }
 
-    // Toggle LED
-    function toggleLED() {
-      ledRef.get().then(snapshot => {
-        const current = snapshot.val();
-        const next = current === "ON" ? "OFF" : "ON";
-        ledRef.set(next);
-        console.log("Button clicked, set LED to:", next);
-      });
+  function sendText() {
+    const txt = document.getElementById("textInput").value;
+    if (txt) {
+      webToEspRef.set(txt);
+      document.getElementById("textInput").value = "";
     }
-  </script>
+  }
+</script>
+
 </body>
 </html>
